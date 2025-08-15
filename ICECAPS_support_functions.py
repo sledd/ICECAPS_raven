@@ -82,11 +82,14 @@ def load_raven_sleigh_data(varnames_list):
     return asfs_data_lev2
 
 
-def open_corrected_simba_temps(file_version='v4.1_20250729_sfcdif+4.0'):
+def open_corrected_simba_temps(file_version='v4.3_20250815_sfcdif+4.0_ksi16.0'):
     acceptable_file_versions = ['v3_20250724', 'v2_20250723', 'v3_20250724_sfcdif+2', 'v2_20250723_sfcdif+2',
                                'v4_20250726_sfcdif+4.0', 'v4_20250726_sfcdif+0.0',
                                'v4.1_20250729_sfcdif+4.0', 'v4.1_20250729_sfcdif+0.0',
-                               'v4.2_20250730_sfcdif+4.0_ksi20.0', 'v4.2_20250730_sfcdif+4.0_ksi15.0']
+                               'v4.2_20250730_sfcdif+4.0_ksi20.0', 'v4.2_20250730_sfcdif+4.0_ksi15.0',
+                               'v4.2_20250730_sfcdif+6.0_ksi15.0',
+                               'v4.3_20250815_sfcdif+4.0_ksi15.0', 'v4.3_20250815_sfcdif+6.0_ksi15.0',
+                                'v4.3_20250815_sfcdif+4.0_ksi16.0']
 
     if file_version not in acceptable_file_versions:
         print("Please choose of these versions: ", acceptable_file_versions)
@@ -99,7 +102,7 @@ def open_corrected_simba_temps(file_version='v4.1_20250729_sfcdif+4.0'):
     elif 'v4.1_' in file_version:
         fn = f'/home/asledd/ICECAPS/firnprofile_solar-correction_rolling-variance-max-sfc-{file_version}_created_20250729.nc'
         varnames += ['detected_surface']
-    elif 'v4.2_' in file_version:
+    elif 'v4.2_' in file_version or 'v4.3_' in file_version:
         fn = f'/home/asledd/ICECAPS/firnprofile_solar-correction_rolling-variance-max-sfc-{file_version}_created_20250730.nc'
         varnames += ['detected_surface']
     elif 'v4_' in file_version:
