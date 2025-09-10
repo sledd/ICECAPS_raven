@@ -130,7 +130,8 @@ def interpolate_and_mask(var_data, var_secs, goal_secs):
     """
     interpolate var_data to have same time steps as goal_secs; mask data outside of bounds
     """
-    f_var = interpolate.interp1d(var_secs, var_data, fill_value=-999, bounds_error=False)
+    var_data = np.ma.masked_invalid(var_data)
+    f_var = interpolate.interp1d(var_secs[~var_data.mask], var_data[~var_data.mask], fill_value=-999, bounds_error=False)
     interped_var = f_var(goal_secs)
     interped_var = np.ma.masked_equal(interped_var, -999)
     return interped_var
@@ -176,9 +177,9 @@ def get_diurnal_cycle(dates_in, data_in, stat='mean'):
     
     tod = get_simba_time_of_day(dates_in)
     if stat=='mean':
-        daily_data_out = np.array([data_in[np.where(tod==t)[0],:].mean(axis=0) for t in np.unique(tod)])
+        daily_data_out = np.array([data_in[np.ma.where(tod==t)[0],:].mean(axis=0) for t in np.unique(tod)])
     elif stat=='std':
-        daily_data_out = np.array([data_in[np.where(tod==t)[0],:].std(axis=0) for t in np.unique(tod)])
+        daily_data_out = np.array([data_in[np.ma.where(tod==t)[0],:].std(axis=0) for t in np.unique(tod)])
 
     return daily_data_out
 
@@ -306,3 +307,33 @@ def get_gpr_melt():
     gpr_dates = np.array([datetime.datetime.strptime(d, '%Y-%m-%d %H:%M:%S') for d in df['date'].values])       
     gpr_melt = df['Melt_Index_Normal'].values
     return {'dates':gpr_dates, 'melt':gpr_melt}
+
+def get_gpr_melt_dates(gpr_melt_data, simba_dates, melt_threshold=0.8):
+
+    melty_dates = np.ma.masked_where(gpr_melt_data<melt_threshold, simba_dates)
+    melty_day_mn = np.unique([' '.join((str(d.day), str(d.month))) for d in melty_dates[~melty_dates.mask]])
+    all_day_mn = np.asarray([' '.join((str(d.day), str(d.month))) for d in simba_dates])
+    
+    ## inefficient but whatever
+    simba_melty_indices = np.zeros(simba_dates.shape)
+    
+    for md in melty_day_mn:    
+        simba_melty_indices[np.where(all_day_mn==md)] = 1
+
+    return simba_melty_indices
+
+def get_subset_dTdz_cycle(melt_indices, data_in, melt_or_dry, dates_in):
+    
+    melt_masking = {'melt':1, 'dry':0}
+
+    if melt_or_dry not in melt_masking.keys():
+        print('Give melt or dry to determine subset')
+        return
+
+    melt_val = melt_masking[melt_or_dry]
+    
+    data_in_subset = data_in[np.where(melt_indices==melt_val)[0],:]
+    simba_dates_subset = dates_in[np.where(melt_indices==melt_val)[0]]
+    
+    daily_avgs_subset = get_diurnal_cycle(simba_dates_subset, data_in_subset, stat='mean')
+    return daily_avgs_subset
